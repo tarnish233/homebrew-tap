@@ -1,24 +1,24 @@
 class Gitpic < Formula
-  desc "Upload local/clipboard images to a GitHub repo (image host) and get a Markdown link"
+  desc "Upload images to a GitHub repository and print Markdown links"
   homepage "https://github.com/tarnish233/gitpic-cli"
-  version "0.1.2"
+  version "0.1.5"
   license "MIT"
 
   on_macos do
     on_arm do
-      url "https://github.com/tarnish233/gitpic-cli/releases/download/v0.1.2/gitpic-aarch64-apple-darwin.tar.gz"
-      sha256 "7a300ec1008cc17ec210daa1f68af25fa1f33684ac78ee4e2c2ac940695c50c0"
+      url "https://github.com/tarnish233/gitpic-cli/releases/download/v0.1.5/gitpic-aarch64-apple-darwin.tar.gz"
+      sha256 "00ef4c7082b2985863f165f00d55457deb9d70aee9b5532c5ab05f826e05d3fe"
     end
     on_intel do
-      url "https://github.com/tarnish233/gitpic-cli/releases/download/v0.1.2/gitpic-x86_64-apple-darwin.tar.gz"
-      sha256 "45e44488d517819ddadc255062c85228dc311b6c4e8f0752676f2067f5935e23"
+      url "https://github.com/tarnish233/gitpic-cli/releases/download/v0.1.5/gitpic-x86_64-apple-darwin.tar.gz"
+      sha256 "0dc3dce7576558521a69d2e1119abb1527cca66799be41d212a40094962c0c43"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/tarnish233/gitpic-cli/releases/download/v0.1.2/gitpic-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "82dae8f3ea6b93db1bb5d85a063995acbf05361a366802499ec40421de0bfefc"
+      url "https://github.com/tarnish233/gitpic-cli/releases/download/v0.1.5/gitpic-x86_64-unknown-linux-gnu.tar.gz"
+      sha256 "4ec20abb61e5b9f1f292af131e2fd360818b1845ebbbdb0448a8d6a15035041e"
     end
   end
 
