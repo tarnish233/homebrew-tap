@@ -1,7 +1,6 @@
 class Gitpic < Formula
   desc "Upload images to a GitHub repository and print Markdown links"
   homepage "https://github.com/tarnish233/gitpic-cli"
-  version "0.1.5"
   license "MIT"
 
   on_macos do

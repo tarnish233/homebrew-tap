@@ -53,7 +53,6 @@ jobs:
       - name: Update formula
         env:
           GITPIC_TAG: ${{ steps.release.outputs.tag }}
-          GITPIC_VERSION: ${{ steps.release.outputs.version }}
           GITPIC_ARM_SHA: ${{ steps.release.outputs.arm_sha }}
           GITPIC_INTEL_SHA: ${{ steps.release.outputs.intel_sha }}
           GITPIC_LINUX_SHA: ${{ steps.release.outputs.linux_sha }}
@@ -62,7 +61,6 @@ jobs:
           path = "Formula/gitpic.rb"
           formula = File.read(path)
 
-          version = ENV.fetch("GITPIC_VERSION")
           tag = ENV.fetch("GITPIC_TAG")
           assets = {
             "gitpic-aarch64-apple-darwin.tar.gz" => ENV.fetch("GITPIC_ARM_SHA"),
@@ -70,7 +68,6 @@ jobs:
             "gitpic-x86_64-unknown-linux-gnu.tar.gz" => ENV.fetch("GITPIC_LINUX_SHA"),
           }
 
-          raise "version field not found" unless formula.sub!(/version "[^"]+"/, %(version "#{version}"))
           formula.gsub!(%r{/releases/download/v[^/]+/gitpic-}, "/releases/download/#{tag}/gitpic-")
 
           assets.each do |asset, checksum|
