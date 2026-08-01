@@ -1,8 +1,8 @@
 class Cloudot < Formula
   desc "Sync dotfiles across Macs through Git"
   homepage "https://github.com/tarnish233/cloudot"
-  url "https://github.com/tarnish233/cloudot/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "aa2a04bcb405a951a313af9381ecb2ccfb5d6d1fe2998555f4b753ef93c24c73"
+  url "https://github.com/tarnish233/cloudot/archive/refs/tags/v0.2.0.tar.gz"
+  sha256 "1b60aab10ffde4ae7c3749cbba31c65fd3087d34b1edc8f88cd0bcbddfa96a2b"
   license "MIT"
 
   depends_on "rust" => :build
