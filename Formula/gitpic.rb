@@ -5,19 +5,19 @@ class Gitpic < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/tarnish233/gitpic-cli/releases/download/v0.1.8/gitpic-aarch64-apple-darwin.tar.gz"
-      sha256 "0a2ce5a9e70151106c944e6fd0bfdc8a280f3e717e05aa63484920916dfa832a"
+      url "https://github.com/tarnish233/gitpic-cli/releases/download/v0.2.0/gitpic-aarch64-apple-darwin.tar.gz"
+      sha256 "cc8f18fc933ff1988ad478d57d20d13182b4708aaed234af4123189488189ed6"
     end
     on_intel do
-      url "https://github.com/tarnish233/gitpic-cli/releases/download/v0.1.8/gitpic-x86_64-apple-darwin.tar.gz"
-      sha256 "18ea19f574c61a5291813f7eb2d7a41f9397fbe95ab6f6b374ea5f6faf2f8fd1"
+      url "https://github.com/tarnish233/gitpic-cli/releases/download/v0.2.0/gitpic-x86_64-apple-darwin.tar.gz"
+      sha256 "19924bb4976fab478d95ebd7d66d299824ec039ed0377f78afa374d97a6d008e"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/tarnish233/gitpic-cli/releases/download/v0.1.8/gitpic-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "627b25b44db2042b0ce1965b5ee6168d40bac0e61315432839ef8eb5aa84c402"
+      url "https://github.com/tarnish233/gitpic-cli/releases/download/v0.2.0/gitpic-x86_64-unknown-linux-gnu.tar.gz"
+      sha256 "cbf740681481e5f71908e8b6312029d978a2bac3c8d6f1e156b69fabdd86303c"
     end
   end
 
