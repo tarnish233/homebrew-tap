@@ -10,9 +10,14 @@ brew install tarnish233/tap/gitpic_cli         # Formula：只要命令行（Lin
 - `gitpic_app` 内嵌的就是同版本的 CLI，所以 cask 会把它软链成 `bin/gitpic` 并生成 bash、zsh、fish
   三份补全 —— App 和终端命令是同一个二进制，升 App 就是升命令，版本不可能对不上。
 - `gitpic_cli` 是纯命令行（预编译二进制 + 补全）。App 只有 arm64 包，Linux、Intel Mac、CI 走它。
-- **两个别都装**，它们抢同一个 `bin/gitpic`。实测：cask 先在，formula 装得上但 link 失败（brew 列出
-  `bin/gitpic`、`_gitpic`、`gitpic.fish` 三个冲突文件，并提示 `shadowed by`）；formula 先在，cask
-  打印 `skipping link` 后照样装完 App。两种情况都能用，但命令和补全归先到的那个。要换就先卸另一个。
+- **两个别都装**，它们抢同一个 `bin/gitpic` 和同三份补全。两个方向都实测过：
+  - cask 先在 → `brew install gitpic_cli` 以 `Error: The \`brew link\` step did not complete
+    successfully` 结束：keg 装上了但整个没 link（`brew doctor` 会念它），命令和补全仍归 cask。
+  - formula 先在 → cask 照样装完 App，只是打印 `skipping link` 和三条 `Will not overwrite …`；
+    命令和补全仍归 formula，且 keg 里的文件一个字节没动（md5 比对过 —— brew 自己拦住了写穿软链）。
+  两种情况都能用，只是 App 里那份 CLI 白放着。要切换先卸掉另一个；**从「formula 先在」切到 cask
+  之后要补一次 `brew reinstall --cask gitpic_app`** —— 当初 cask 跳过了链接，卸掉 formula 之后
+  `bin/gitpic` 会直接消失。
 - App 是本机自签名、未经 Apple 公证的构建，quarantine 不去掉根本打不开，所以 cask 在 `preflight` 里
   先 `xattr -dr com.apple.quarantine`（必须在这一步：补全是**跑**那个二进制生成的，带着 quarantine
   会被 macOS SIGKILL）。`brew uninstall --cask gitpic_app` 会把软链和三份补全一并清掉；`--zap` 再清
