@@ -1,4 +1,4 @@
-name: Update gitpic_cli formula and gitpic_app cask
+name: Update gitpic_cli formula and gitpic cask
 
 # The file keeps its old spelling on purpose: renaming it would start a fresh
 # workflow in the Actions UI and orphan this one's run history, and GitHub reads
@@ -27,7 +27,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag="$(gh api repos/tarnish233/gitpic-cli/releases/latest --jq .tag_name)"
+          tag="$(gh api repos/tarnish233/gitpic/releases/latest --jq .tag_name)"
           if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Unexpected release tag: $tag" >&2
             exit 1
@@ -38,9 +38,9 @@ jobs:
           # release that ships one without the other is a release this tap cannot
           # describe, and `gh release download` exits non-zero when nothing matches,
           # which is the loud failure we want over a half-updated tap.
-          gh release download "$tag" --repo tarnish233/gitpic-cli \
+          gh release download "$tag" --repo tarnish233/gitpic \
             --pattern "gitpic-*.tar.gz.sha256" --dir checksums
-          gh release download "$tag" --repo tarnish233/gitpic-cli \
+          gh release download "$tag" --repo tarnish233/gitpic \
             --pattern "GitPic-*-macos-arm64.zip.sha256" --dir checksums
 
           read_checksum() {
@@ -94,7 +94,7 @@ jobs:
           # only these two lines move. Both are anchored and both raise: a silent
           # no-op here would leave the cask pointing at the previous release with the
           # previous checksum, which installs the wrong app rather than failing.
-          cask_path = "Casks/gitpic_app.rb"
+          cask_path = "Casks/gitpic.rb"
           cask = File.read(cask_path)
 
           version = ENV.fetch("GITPIC_VERSION")
@@ -105,19 +105,19 @@ jobs:
           RUBY
 
           ruby -c Formula/gitpic_cli.rb
-          ruby -c Casks/gitpic_app.rb
+          ruby -c Casks/gitpic.rb
 
       - name: Commit update
         env:
           GITPIC_VERSION: ${{ steps.release.outputs.version }}
         run: |
-          if git diff --quiet -- Formula/gitpic_cli.rb Casks/gitpic_app.rb; then
+          if git diff --quiet -- Formula/gitpic_cli.rb Casks/gitpic.rb; then
             echo "Formula and cask are already current."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Formula/gitpic_cli.rb Casks/gitpic_app.rb
-          git commit -m "chore: update gitpic_cli and gitpic_app to ${GITPIC_VERSION}"
+          git add Formula/gitpic_cli.rb Casks/gitpic.rb
+          git commit -m "chore: update gitpic_cli and gitpic to ${GITPIC_VERSION}"
           git push

@@ -1,11 +1,11 @@
-cask "gitpic_app" do
+cask "gitpic" do
   version "0.11.4"
   sha256 "b7a6006531c328c094a5c4eac620d19ef677e092e7a79d1c870f22c7c788d08f"
 
-  url "https://github.com/tarnish233/gitpic-cli/releases/download/v#{version}/GitPic-#{version}-macos-arm64.zip"
+  url "https://github.com/tarnish233/gitpic/releases/download/v#{version}/GitPic-#{version}-macos-arm64.zip"
   name "GitPic"
   desc "Menu-bar app that uploads images to a GitHub repository and copies the link"
-  homepage "https://github.com/tarnish233/gitpic-cli"
+  homepage "https://github.com/tarnish233/gitpic"
 
   # Apple Silicon only (the Release ships one arm64 zip), and the bundle's
   # LSMinimumSystemVersion is 14.0.
