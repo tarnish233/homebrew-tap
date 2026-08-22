@@ -1,4 +1,4 @@
-name: Update gitpic_cli formula
+name: Update gitpic_cli formula and gitpic_app cask
 
 # The file keeps its old spelling on purpose: renaming it would start a fresh
 # workflow in the Actions UI and orphan this one's run history, and GitHub reads
@@ -34,8 +34,14 @@ jobs:
           fi
 
           mkdir checksums
+          # Two patterns because the app zip is capitalised. Both are required: a
+          # release that ships one without the other is a release this tap cannot
+          # describe, and `gh release download` exits non-zero when nothing matches,
+          # which is the loud failure we want over a half-updated tap.
           gh release download "$tag" --repo tarnish233/gitpic-cli \
             --pattern "gitpic-*.tar.gz.sha256" --dir checksums
+          gh release download "$tag" --repo tarnish233/gitpic-cli \
+            --pattern "GitPic-*-macos-arm64.zip.sha256" --dir checksums
 
           read_checksum() {
             local asset="$1"
@@ -53,13 +59,16 @@ jobs:
           echo "arm_sha=$(read_checksum gitpic-aarch64-apple-darwin.tar.gz)" >> "$GITHUB_OUTPUT"
           echo "intel_sha=$(read_checksum gitpic-x86_64-apple-darwin.tar.gz)" >> "$GITHUB_OUTPUT"
           echo "linux_sha=$(read_checksum gitpic-x86_64-unknown-linux-gnu.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo "app_sha=$(read_checksum "GitPic-${tag#v}-macos-arm64.zip")" >> "$GITHUB_OUTPUT"
 
-      - name: Update formula
+      - name: Update formula and cask
         env:
           GITPIC_TAG: ${{ steps.release.outputs.tag }}
+          GITPIC_VERSION: ${{ steps.release.outputs.version }}
           GITPIC_ARM_SHA: ${{ steps.release.outputs.arm_sha }}
           GITPIC_INTEL_SHA: ${{ steps.release.outputs.intel_sha }}
           GITPIC_LINUX_SHA: ${{ steps.release.outputs.linux_sha }}
+          GITPIC_APP_SHA: ${{ steps.release.outputs.app_sha }}
         run: |
           ruby <<'RUBY'
           path = "Formula/gitpic_cli.rb"
@@ -80,21 +89,35 @@ jobs:
           end
 
           File.write(path, formula)
+
+          # The cask carries the version itself and interpolates it into the url, so
+          # only these two lines move. Both are anchored and both raise: a silent
+          # no-op here would leave the cask pointing at the previous release with the
+          # previous checksum, which installs the wrong app rather than failing.
+          cask_path = "Casks/gitpic_app.rb"
+          cask = File.read(cask_path)
+
+          version = ENV.fetch("GITPIC_VERSION")
+          raise "cask version line not found" unless cask.sub!(/^(  version ")[^"]+(")$/) { "#{$1}#{version}#{$2}" }
+          raise "cask sha256 line not found" unless cask.sub!(/^(  sha256 ")[0-9a-f]{64}(")$/) { "#{$1}#{ENV.fetch("GITPIC_APP_SHA")}#{$2}" }
+
+          File.write(cask_path, cask)
           RUBY
 
           ruby -c Formula/gitpic_cli.rb
+          ruby -c Casks/gitpic_app.rb
 
       - name: Commit update
         env:
           GITPIC_VERSION: ${{ steps.release.outputs.version }}
         run: |
-          if git diff --quiet -- Formula/gitpic_cli.rb; then
-            echo "Formula is already current."
+          if git diff --quiet -- Formula/gitpic_cli.rb Casks/gitpic_app.rb; then
+            echo "Formula and cask are already current."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Formula/gitpic_cli.rb
-          git commit -m "chore: update gitpic_cli to ${GITPIC_VERSION}"
+          git add Formula/gitpic_cli.rb Casks/gitpic_app.rb
+          git commit -m "chore: update gitpic_cli and gitpic_app to ${GITPIC_VERSION}"
           git push
