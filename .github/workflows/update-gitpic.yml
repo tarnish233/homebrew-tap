@@ -5,9 +5,19 @@ name: Update gitpic_cli formula and gitpic cask
 # the cron from whatever file is on the default branch either way.
 
 on:
+  # The cron is the fallback now, not the only way in — see `repository_dispatch`
+  # below. It stays six-hourly on purpose: it exists to catch what the dispatch
+  # missed (an unset or expired token in gitpic, a GitHub hiccup), and polling more
+  # often would only make the fallback louder without making it more correct.
   schedule:
     - cron: "17 */6 * * *"
   workflow_dispatch:
+  # Fired by gitpic's release workflow the moment a release is published, so the tap
+  # follows within seconds instead of within six hours. Measured before this existed:
+  # 0.13.0 was published at 05:17Z with the tap still pinning 0.11.5, so `brew
+  # upgrade` had nothing to offer for what was already released.
+  repository_dispatch:
+    types: [gitpic-released]
 
 permissions:
   contents: write
@@ -26,10 +36,29 @@ jobs:
         id: release
         env:
           GH_TOKEN: ${{ github.token }}
+          # Read through the environment, never interpolated into the script body:
+          # this value comes off an event payload, and `${{ }}` inside `run:` would
+          # splice it straight into the shell.
+          #
+          # Empty on a cron or a manual run, which is exactly when there is nothing to
+          # cross-check against.
+          WANT_VERSION: ${{ github.event.client_payload.version }}
         run: |
           tag="$(gh api repos/tarnish233/gitpic/releases/latest --jq .tag_name)"
           if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Unexpected release tag: $tag" >&2
+            exit 1
+          fi
+
+          # A dispatch names the version it fired for, and it has to match what
+          # `releases/latest` says. Publishing a release and `latest` moving are not
+          # one atomic act, so a run that started a moment too early would read the
+          # *previous* release, pin the tap to it, and look like a success — then sit
+          # there until the next cron. That silent wrong answer is worth failing over;
+          # the six-hourly poll is still behind us either way.
+          if [[ -n "${WANT_VERSION:-}" && "$tag" != "v${WANT_VERSION}" ]]; then
+            echo "dispatch was fired for v${WANT_VERSION} but releases/latest is $tag" >&2
+            echo "refusing to pin the tap to a release the dispatch did not name" >&2
             exit 1
           fi
 
