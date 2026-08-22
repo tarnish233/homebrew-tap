@@ -1,8 +1,8 @@
 cask "gitpic" do
-  version "0.13.1"
-  sha256 "4c618ae27450a8cc8e78e86b2e99d5739f2a371cfeaed47607438a58f35ebb45"
+  version "0.13.2"
+  sha256 "a4e9fc6dd024f8be1df8691aeda6c2e1416a8ced56143d1eb24b87d424be1dab"
 
-  url "https://github.com/tarnish233/gitpic/releases/download/v#{version}/GitPic-#{version}-macos-arm64.zip"
+  url "https://github.com/tarnish233/gitpic/releases/download/v#{version}/GitPic-#{version}-macos-arm64.dmg"
   name "GitPic"
   desc "Menu-bar app that uploads images to a GitHub repository and copies the link"
   homepage "https://github.com/tarnish233/gitpic"
