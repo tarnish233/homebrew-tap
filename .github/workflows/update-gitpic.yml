@@ -63,14 +63,35 @@ jobs:
           fi
 
           mkdir checksums
-          # Two patterns because the app zip is capitalised. Both are required: a
-          # release that ships one without the other is a release this tap cannot
-          # describe, and `gh release download` exits non-zero when nothing matches,
-          # which is the loud failure we want over a half-updated tap.
+          # A separate call because the app asset is capitalised. `gh release download`
+          # exits non-zero when nothing matches, which is the loud failure we want over
+          # a half-updated tap.
           gh release download "$tag" --repo tarnish233/gitpic \
             --pattern "gitpic-*.tar.gz.sha256" --dir checksums
-          gh release download "$tag" --repo tarnish233/gitpic \
-            --pattern "GitPic-*-macos-arm64.zip.sha256" --dir checksums
+
+          # The app asset is a .dmg from 0.13.2 on and was a .zip before it, so this
+          # reads whichever the release actually shipped rather than insisting on one.
+          #
+          # That is not politeness toward old releases — it is what makes the switch
+          # safe to land at all. The cask's `url` is not rewritten by this workflow
+          # (it interpolates `version`), so hardcoding `.dmg` here would have meant
+          # the cask pointing at an asset the current release does not have, and
+          # `brew install` 404ing until the next release. Reading the format and
+          # writing it into the url below keeps those two in step by construction.
+          app_asset=""
+          for candidate in "GitPic-${tag#v}-macos-arm64.dmg" \
+                           "GitPic-${tag#v}-macos-arm64.zip"; do
+            if gh release download "$tag" --repo tarnish233/gitpic \
+                 --pattern "${candidate}.sha256" --dir checksums 2>/dev/null; then
+              app_asset="$candidate"
+              break
+            fi
+          done
+          if [[ -z "$app_asset" ]]; then
+            echo "release $tag ships no macos-arm64 app asset (.dmg or .zip)" >&2
+            exit 1
+          fi
+          echo "app asset: $app_asset"
 
           read_checksum() {
             local asset="$1"
@@ -88,7 +109,8 @@ jobs:
           echo "arm_sha=$(read_checksum gitpic-aarch64-apple-darwin.tar.gz)" >> "$GITHUB_OUTPUT"
           echo "intel_sha=$(read_checksum gitpic-x86_64-apple-darwin.tar.gz)" >> "$GITHUB_OUTPUT"
           echo "linux_sha=$(read_checksum gitpic-x86_64-unknown-linux-gnu.tar.gz)" >> "$GITHUB_OUTPUT"
-          echo "app_sha=$(read_checksum "GitPic-${tag#v}-macos-arm64.zip")" >> "$GITHUB_OUTPUT"
+          echo "app_asset=$app_asset" >> "$GITHUB_OUTPUT"
+          echo "app_sha=$(read_checksum "$app_asset")" >> "$GITHUB_OUTPUT"
 
       - name: Update formula and cask
         env:
@@ -98,6 +120,7 @@ jobs:
           GITPIC_INTEL_SHA: ${{ steps.release.outputs.intel_sha }}
           GITPIC_LINUX_SHA: ${{ steps.release.outputs.linux_sha }}
           GITPIC_APP_SHA: ${{ steps.release.outputs.app_sha }}
+          GITPIC_APP_ASSET: ${{ steps.release.outputs.app_asset }}
         run: |
           ruby <<'RUBY'
           path = "Formula/gitpic_cli.rb"
@@ -129,6 +152,15 @@ jobs:
           version = ENV.fetch("GITPIC_VERSION")
           raise "cask version line not found" unless cask.sub!(/^(  version ")[^"]+(")$/) { "#{$1}#{version}#{$2}" }
           raise "cask sha256 line not found" unless cask.sub!(/^(  sha256 ")[0-9a-f]{64}(")$/) { "#{$1}#{ENV.fetch("GITPIC_APP_SHA")}#{$2}" }
+
+          # The url's extension follows the asset that was actually read above, so the
+          # url and the sha256 beside it can never end up describing different files.
+          # This is what lets the release switch from .zip to .dmg without the cask
+          # needing a coordinated edit in the same breath.
+          ext = File.extname(ENV.fetch("GITPIC_APP_ASSET"))
+          raise "unexpected app asset extension: #{ext}" unless [".dmg", ".zip"].include?(ext)
+          raise "cask url line not found" unless
+            cask.sub!(/^(  url "[^"]*macos-arm64)\.(?:dmg|zip)(")$/) { "#{$1}#{ext}#{$2}" }
 
           File.write(cask_path, cask)
           RUBY
