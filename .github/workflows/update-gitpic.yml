@@ -1,4 +1,8 @@
-name: Update gitpic formula
+name: Update gitpic_cli formula
+
+# The file keeps its old spelling on purpose: renaming it would start a fresh
+# workflow in the Actions UI and orphan this one's run history, and GitHub reads
+# the cron from whatever file is on the default branch either way.
 
 on:
   schedule:
@@ -58,7 +62,7 @@ jobs:
           GITPIC_LINUX_SHA: ${{ steps.release.outputs.linux_sha }}
         run: |
           ruby <<'RUBY'
-          path = "Formula/gitpic.rb"
+          path = "Formula/gitpic_cli.rb"
           formula = File.read(path)
 
           tag = ENV.fetch("GITPIC_TAG")
@@ -78,19 +82,19 @@ jobs:
           File.write(path, formula)
           RUBY
 
-          ruby -c Formula/gitpic.rb
+          ruby -c Formula/gitpic_cli.rb
 
       - name: Commit update
         env:
           GITPIC_VERSION: ${{ steps.release.outputs.version }}
         run: |
-          if git diff --quiet -- Formula/gitpic.rb; then
+          if git diff --quiet -- Formula/gitpic_cli.rb; then
             echo "Formula is already current."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Formula/gitpic.rb
-          git commit -m "chore: update gitpic to ${GITPIC_VERSION}"
+          git add Formula/gitpic_cli.rb
+          git commit -m "chore: update gitpic_cli to ${GITPIC_VERSION}"
           git push
