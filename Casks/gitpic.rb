@@ -1,6 +1,6 @@
 cask "gitpic" do
-  version "0.20.3"
-  sha256 "5b834ff81b5472e65c6fe64af368140c55064320ccad389291ee217fe32ad2de"
+  version "0.20.4"
+  sha256 "e94e60ee5f89767012a004ae0c15562ab60fb8a33b4f0e7a53d7b32a05b0d787"
 
   url "https://github.com/tarnish233/gitpic/releases/download/v#{version}/GitPic-#{version}-macos-arm64.dmg"
   name "GitPic"
