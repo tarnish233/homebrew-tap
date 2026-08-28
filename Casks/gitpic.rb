@@ -7,6 +7,19 @@ cask "gitpic" do
   desc "Menu-bar app that uploads images to a GitHub repository and copies the link"
   homepage "https://github.com/tarnish233/gitpic"
 
+  # GitPic installs its own updates: 「检查更新」 in the app downloads the release's disk
+  # image, verifies it against the SHA-256 GitHub publishes, and swaps the bundle. That is
+  # exactly what this stanza is for, and it is what lets the app replace a cask-managed
+  # bundle without brew fighting it.
+  #
+  # It does not mean brew stops managing gitpic. For an `auto_updates` cask Homebrew reads the
+  # version out of the installed `GitPic.app/Contents/Info.plist` and compares *that* against
+  # the version here (`Cask#auto_updates_bundle_outdated?`), rather than its own install
+  # receipt — so `brew upgrade` still upgrades a bundle that is genuinely behind, and does
+  # nothing once the app has already moved itself on. Without this stanza brew compares the
+  # receipt, which goes stale the moment the app self-updates, and reinstalls a version that
+  # is already on disk.
+  auto_updates true
   # Apple Silicon only (the Release ships one arm64 zip), and the bundle's
   # LSMinimumSystemVersion is 14.0.
   depends_on arch: :arm64
@@ -45,6 +58,18 @@ cask "gitpic" do
     system_command "/usr/bin/xattr",
                    args: ["-dr", "com.apple.quarantine", "#{staged_path}/GitPic.app"]
   end
+
+  # Quit the app before the bundle is replaced, and let brew reopen it afterwards —
+  # `Cask::Upgrade` passes `quit: true` by default and re-registers the new bundle with Launch
+  # Services before `open`ing it. Without this, `brew upgrade --cask gitpic` typed into a
+  # terminal moves a bundle that is still running, and the surviving process is then serving a
+  # menu-bar icon from an executable, resources and embedded CLI that need not agree.
+  #
+  # It does not double up with the app's own updater: `uninstall quit:` skips a bundle id that
+  # is not running, and the in-app path has already exited by the time anything brew-side could
+  # run. GitPic is `.accessory`, so this is also the only thing that puts the menu-bar icon
+  # back after a terminal upgrade.
+  uninstall quit: "dev.gitpic.app"
 
   # Only what the app itself creates. `~/.config/gitpic/config.toml` and
   # `~/.local/share/gitpic/history.jsonl` are deliberately absent: they belong to the
