@@ -7,20 +7,10 @@ cask "gitpic" do
   desc "Menu-bar app that uploads images to a GitHub repository and copies the link"
   homepage "https://github.com/tarnish233/gitpic"
 
-  # GitPic installs its own updates: 「检查更新」 in the app downloads the release's disk
-  # image, verifies it against the SHA-256 GitHub publishes, and swaps the bundle. That is
-  # exactly what this stanza is for, and it is what lets the app replace a cask-managed
-  # bundle without brew fighting it.
-  #
-  # It does not mean brew stops managing gitpic. For an `auto_updates` cask Homebrew reads the
-  # version out of the installed `GitPic.app/Contents/Info.plist` and compares *that* against
-  # the version here (`Cask#auto_updates_bundle_outdated?`), rather than its own install
-  # receipt — so `brew upgrade` still upgrades a bundle that is genuinely behind, and does
-  # nothing once the app has already moved itself on. Without this stanza brew compares the
-  # receipt, which goes stale the moment the app self-updates, and reinstalls a version that
-  # is already on disk.
-  auto_updates true
-  # Apple Silicon only (the Release ships one arm64 zip), and the bundle's
+  # A cask-managed GitPic no longer self-updates: the app compares the tap with the installed
+  # bundle and hands the user `brew upgrade --cask gitpic`. Do not add `auto_updates true` — it
+  # would falsely describe the artifact, and a named-cask upgrade bypasses that stanza anyway.
+  # Apple Silicon only (the Release ships one arm64 disk image), and the bundle's
   # LSMinimumSystemVersion is 14.0.
   depends_on arch: :arm64
   depends_on macos: :sonoma
@@ -30,12 +20,21 @@ cask "gitpic" do
   # terminal rather than asking for `gitpic_cli` beside it: one download, one copy, and
   # the two can no longer be at different versions — upgrading the app upgrades the
   # command. `gitpic_cli` stays for people who want only the command line, and for
-  # Linux and Intel, which this zip does not cover. Nothing in the CLI resolves paths
-  # from its own location (no `current_exe`), so running it through this symlink is the
-  # same as running it in place. And if `gitpic_cli` already owns
-  # HOMEBREW_PREFIX/bin/gitpic, Homebrew sees the target belongs to a formula, warns and
-  # skips the link instead of fighting over it (`cask/artifact/symlinked.rb`) — the app
-  # still installs.
+  # Linux and Intel, which this disk image does not cover.
+  #
+  # Running the CLI through this symlink is the same as running it in place — but that is now an
+  # invariant the CLI actively preserves rather than one it gets for free. It used to be true
+  # because nothing in the CLI looked at its own location at all; `gitpic update` now does, to
+  # decide which single upgrade command to print. It calls `current_exe()` and then
+  # **canonicalises**, which is what keeps the two invocations equivalent: on Apple platforms
+  # `current_exe()` is `_NSGetExecutablePath` with no resolution, so through this link it reports
+  # the link's own path — measured, `/opt/homebrew/bin/gitpic`, which has no `.app` ancestor and
+  # no Cellar above it. Without the canonicalise step the commonest install of all would be
+  # classified as neither an app nor a formula and told to run the wrong command, or none.
+  #
+  # And if `gitpic_cli` already owns HOMEBREW_PREFIX/bin/gitpic, Homebrew sees the target belongs
+  # to a formula, warns and skips the link instead of fighting over it
+  # (`cask/artifact/symlinked.rb`) — the app still installs.
   binary "#{appdir}/GitPic.app/Contents/Resources/gitpic"
   # The same three completions the formula installs, generated from the binary that just
   # landed. Homebrew deletes them on uninstall, which a hand-written postflight could
@@ -44,8 +43,8 @@ cask "gitpic" do
   generate_completions_from_executable "#{appdir}/GitPic.app/Contents/Resources/gitpic",
                                        "completion", shells: [:bash, :zsh, :fish]
 
-  # The zip is ad-hoc signed on the build machine and not notarised by Apple, so a
-  # quarantined copy does not merely warn — it refuses to open at all. This is the
+  # The bundle in the disk image is ad-hoc signed on the build machine and not notarised by
+  # Apple, so a quarantined copy does not merely warn — it refuses to open at all. This is the
   # `xattr -dr com.apple.quarantine` line the README used to ask people to type.
   #
   # It has to happen here, in the staging directory, and not in `postflight`, which is
