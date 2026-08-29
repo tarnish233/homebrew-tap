@@ -7,33 +7,10 @@ cask "gitpic" do
   desc "Menu-bar app that uploads images to a GitHub repository and copies the link"
   homepage "https://github.com/tarnish233/gitpic"
 
-  # **This stanza governs bare `brew upgrade`, and not `brew upgrade --cask gitpic`.** The
-  # distinction was missing here and the comment claimed the wrong one, so it is worth stating
-  # from Homebrew's own source rather than from the documentation.
-  #
-  # Bare `brew upgrade` (and `brew outdated`) is where it does what it says. `Cask#outdated_version`
-  # reaches `if auto_updates && !greedy && !greedy_auto_updates` (cask.rb:435), and for an
-  # `auto_updates` cask reads the version out of the installed `GitPic.app/Contents/Info.plist`
-  # and compares *that* against the version above (`auto_updates_bundle_outdated?`, cask.rb:806)
-  # instead of trusting its own install receipt. That is the useful half: a receipt goes stale the
-  # moment the app updates itself, and without this stanza brew would reinstall a version already
-  # on disk. `HOMEBREW_NO_UPGRADE_AUTO_UPDATES_CASKS` turns it off; the opposite variable is now
-  # the default and `odeprecated`.
-  #
-  # **Naming the cask bypasses all of that.** `Cask::Upgrade` splits on whether any cask was
-  # named: with none it passes the user's greedy flags, and with one it calls
-  # `cask.outdated?(greedy: true)` unconditionally (upgrade.rb:70). `greedy: true` makes
-  # cask.rb:435 false, so the `auto_updates` branch is skipped entirely and the answer falls
-  # through to plain receipt inequality (cask.rb:433, :443). So for the one command a user is
-  # ever told to type, this stanza decides nothing.
-  #
-  # That is why the app cannot lean on it and does its own comparison against the tap before
-  # offering the command. The stanza is kept for now because the currently released app installs
-  # its own updates over a cask-managed bundle; it comes out once the version that defers to brew
-  # has shipped, after which plain receipt comparison is the correct behaviour and this would be
-  # a false assertion about a bundle that no longer updates itself.
-  auto_updates true
-  # Apple Silicon only (the Release ships one arm64 zip), and the bundle's
+  # A cask-managed GitPic no longer self-updates: the app compares the tap with the installed
+  # bundle and hands the user `brew upgrade --cask gitpic`. Do not add `auto_updates true` — it
+  # would falsely describe the artifact, and a named-cask upgrade bypasses that stanza anyway.
+  # Apple Silicon only (the Release ships one arm64 disk image), and the bundle's
   # LSMinimumSystemVersion is 14.0.
   depends_on arch: :arm64
   depends_on macos: :sonoma
@@ -43,7 +20,7 @@ cask "gitpic" do
   # terminal rather than asking for `gitpic_cli` beside it: one download, one copy, and
   # the two can no longer be at different versions — upgrading the app upgrades the
   # command. `gitpic_cli` stays for people who want only the command line, and for
-  # Linux and Intel, which this zip does not cover.
+  # Linux and Intel, which this disk image does not cover.
   #
   # Running the CLI through this symlink is the same as running it in place — but that is now an
   # invariant the CLI actively preserves rather than one it gets for free. It used to be true
@@ -66,8 +43,8 @@ cask "gitpic" do
   generate_completions_from_executable "#{appdir}/GitPic.app/Contents/Resources/gitpic",
                                        "completion", shells: [:bash, :zsh, :fish]
 
-  # The zip is ad-hoc signed on the build machine and not notarised by Apple, so a
-  # quarantined copy does not merely warn — it refuses to open at all. This is the
+  # The bundle in the disk image is ad-hoc signed on the build machine and not notarised by
+  # Apple, so a quarantined copy does not merely warn — it refuses to open at all. This is the
   # `xattr -dr com.apple.quarantine` line the README used to ask people to type.
   #
   # It has to happen here, in the staging directory, and not in `postflight`, which is
