@@ -7,20 +7,7 @@ cask "gitpic" do
   desc "Menu-bar app that uploads images to a GitHub repository and copies the link"
   homepage "https://github.com/tarnish233/gitpic"
 
-  # GitPic installs its own updates: 「检查更新」 in the app downloads the release's disk
-  # image, verifies it against the SHA-256 GitHub publishes, and swaps the bundle. That is
-  # exactly what this stanza is for, and it is what lets the app replace a cask-managed
-  # bundle without brew fighting it.
-  #
-  # It does not mean brew stops managing gitpic. For an `auto_updates` cask Homebrew reads the
-  # version out of the installed `GitPic.app/Contents/Info.plist` and compares *that* against
-  # the version here (`Cask#auto_updates_bundle_outdated?`), rather than its own install
-  # receipt — so `brew upgrade` still upgrades a bundle that is genuinely behind, and does
-  # nothing once the app has already moved itself on. Without this stanza brew compares the
-  # receipt, which goes stale the moment the app self-updates, and reinstalls a version that
-  # is already on disk.
-  auto_updates true
-  # Apple Silicon only (the Release ships one arm64 zip), and the bundle's
+  # Apple Silicon only (the Release ships one arm64 app disk image), and the bundle's
   # LSMinimumSystemVersion is 14.0.
   depends_on arch: :arm64
   depends_on macos: :sonoma
@@ -30,7 +17,7 @@ cask "gitpic" do
   # terminal rather than asking for `gitpic_cli` beside it: one download, one copy, and
   # the two can no longer be at different versions — upgrading the app upgrades the
   # command. `gitpic_cli` stays for people who want only the command line, and for
-  # Linux and Intel, which this zip does not cover. Nothing in the CLI resolves paths
+  # Linux and Intel, which the app bundle does not cover. Nothing in the CLI resolves paths
   # from its own location (no `current_exe`), so running it through this symlink is the
   # same as running it in place. And if `gitpic_cli` already owns
   # HOMEBREW_PREFIX/bin/gitpic, Homebrew sees the target belongs to a formula, warns and
@@ -44,7 +31,7 @@ cask "gitpic" do
   generate_completions_from_executable "#{appdir}/GitPic.app/Contents/Resources/gitpic",
                                        "completion", shells: [:bash, :zsh, :fish]
 
-  # The zip is ad-hoc signed on the build machine and not notarised by Apple, so a
+  # The disk image is ad-hoc signed on the build machine and not notarised by Apple, so a
   # quarantined copy does not merely warn — it refuses to open at all. This is the
   # `xattr -dr com.apple.quarantine` line the README used to ask people to type.
   #
@@ -65,10 +52,9 @@ cask "gitpic" do
   # terminal moves a bundle that is still running, and the surviving process is then serving a
   # menu-bar icon from an executable, resources and embedded CLI that need not agree.
   #
-  # It does not double up with the app's own updater: `uninstall quit:` skips a bundle id that
-  # is not running, and the in-app path has already exited by the time anything brew-side could
-  # run. GitPic is `.accessory`, so this is also the only thing that puts the menu-bar icon
-  # back after a terminal upgrade.
+  # This is load-bearing for the app's update sheet: a cask-managed bundle is handed back to
+  # Homebrew instead of being replaced in-app. GitPic is `.accessory`, so brew's reopen is also
+  # the only thing that puts the menu-bar icon back after a terminal upgrade.
   uninstall quit: "dev.gitpic.app"
 
   # Only what the app itself creates. `~/.config/gitpic/config.toml` and
