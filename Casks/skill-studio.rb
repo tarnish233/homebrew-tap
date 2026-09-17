@@ -15,4 +15,9 @@ cask "skill-studio" do
   depends_on macos: :monterey
 
   app "Skill Studio.app"
+
+  postflight_steps do
+    run "/usr/bin/xattr",
+        args: ["-dr", "com.apple.quarantine", "{{appdir}}/Skill Studio.app"]
+  end
 end

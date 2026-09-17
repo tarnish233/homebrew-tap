@@ -11,7 +11,9 @@ brew tap tarnish233/tap
 brew install --cask tarnish233/tap/skill-studio
 ```
 
-当前安装包尚未经过 Apple 公证；首次启动若被 Gatekeeper 拦截，请在 macOS「系统设置 → 隐私与安全性」中允许打开。
+通过本 Cask 安装、重装或升级时，会自动移除 Skill Studio.app 的 `com.apple.quarantine` 属性，避免因下载隔离标记而需要手动允许打开。使用 Homebrew 配置的应用目录（兼容 `--appdir`），不修改其他应用或系统 Gatekeeper 设置。当前安装包仍未经过 Apple 公证；直接下载 DMG 安装不包含这一步。
+
+已通过旧版 Cask 安装且被拦截的用户，可执行 `brew update` 后再运行 `brew reinstall --cask tarnish233/tap/skill-studio`，应用新的安装步骤。
 
 更新与卸载：
 
