@@ -27,7 +27,19 @@ brew uninstall --cask tarnish233/tap/skill-studio
 
 [项目主页与使用说明](https://github.com/tarnish233/skill-studio) · [下载与更新日志](https://github.com/tarnish233/skill-studio/releases)
 
-维护时更新 `Casks/skill-studio.rb` 中的版本号和 DMG SHA-256；`brew livecheck --cask tarnish233/tap/skill-studio` 可检查上游最新版本。
+### 自动同步版本
+
+Skill Studio 的 Release 工作流成功上传安装包后，会立即调用 `Update Homebrew tap` 工作流：检查最新正式版、下载 macOS 通用 DMG、核对 SHA-256，然后自动提交并推送本仓库的 Cask 更新。保留安装后移除隔离属性的步骤，无新版本时不产生提交。
+
+触发点是发布成功，不是普通代码提交；草稿、预发布及旧版本不会覆盖当前 Cask。跨仓库推送使用仅对本 tap 有写权限的部署密钥，私钥保存在 Skill Studio 仓库的 `HOMEBREW_TAP_DEPLOY_KEY` Actions secret 中。
+
+自动同步失败后，可以在 **Skill Studio 仓库** Actions → Update Homebrew tap → Run workflow 重试，或执行：
+
+```bash
+gh workflow run update-homebrew.yml --repo tarnish233/skill-studio
+```
+
+`brew livecheck --cask tarnish233/tap/skill-studio` 仍可用于手动检查版本。
 
 ## 历史下架：GitPic
 
