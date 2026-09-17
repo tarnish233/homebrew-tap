@@ -1,6 +1,33 @@
 # homebrew-tap
 
-**这个 tap 已退役，不再提供任何 formula 或 cask。**
+个人 Homebrew tap，目前提供 Skill Studio 的 macOS Cask。
+
+## Skill Studio
+
+集中管理 Claude Code、Codex 和项目的 skill。支持 macOS 12 Monterey 及以上，安装包同时支持 Apple Silicon 与 Intel。
+
+```bash
+brew tap tarnish233/tap
+brew install --cask tarnish233/tap/skill-studio
+```
+
+当前安装包尚未经过 Apple 公证；首次启动若被 Gatekeeper 拦截，请在 macOS「系统设置 → 隐私与安全性」中允许打开。
+
+更新与卸载：
+
+```bash
+brew update
+brew upgrade --cask tarnish233/tap/skill-studio
+brew uninstall --cask tarnish233/tap/skill-studio
+```
+
+卸载仅移除应用，保留 `~/.skill-studio` 中的 Hub、配置及备份，以及各 Agent 和项目的 skill 文件。
+
+[项目主页与使用说明](https://github.com/tarnish233/skill-studio) · [下载与更新日志](https://github.com/tarnish233/skill-studio/releases)
+
+维护时更新 `Casks/skill-studio.rb` 中的版本号和 DMG SHA-256；`brew livecheck --cask tarnish233/tap/skill-studio` 可检查上游最新版本。
+
+## 历史下架：GitPic
 
 `gitpic` 的 cask 与 `gitpic_cli` 的 formula 都已于 2026-09 移除，随之下线的还有每六小时同步
 Release 的 `update-gitpic.yml`。原因是上游 [gitpic](https://github.com/tarnish233/gitpic) 从
@@ -8,12 +35,12 @@ Release 的 `update-gitpic.yml`。原因是上游 [gitpic](https://github.com/ta
 求 app 判断「这个 bundle 是不是 brew 装的」并在是的时候拒绝自更新，那套判断的成本超过了它买到的
 东西。
 
-已经 tap 过的话，清掉即可：
+如果不再需要 GitPic 的旧 Homebrew 安装，可执行：
 
 ```bash
 brew uninstall --cask gitpic      # 如果装的是 App（会同时删掉 /Applications/GitPic.app）
 brew uninstall gitpic_cli         # 如果装的是命令行
-brew untap tarnish233/homebrew-tap
+# 仅在不再使用本 tap 的任何软件时，执行 brew untap tarnish233/tap
 ```
 
 ⚠️ `brew uninstall --cask gitpic` **会删掉 `/Applications/GitPic.app`**，所以想继续用 App 的话
