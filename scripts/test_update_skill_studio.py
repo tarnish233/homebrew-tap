@@ -1,5 +1,6 @@
+import json
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from update_skill_studio import update_cask
 
@@ -45,6 +46,19 @@ class UpdateTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 update_cask(self.text, {**self.release, "assets": assets}, self.download)
         self.download.assert_not_called()
+
+    def test_reads_assets_endpoint_when_release_detail_has_no_assets(self):
+        release = {**self.release, "id": 123, "assets": []}
+        with patch(
+            "update_skill_studio.subprocess.check_output",
+            return_value=json.dumps(self.release["assets"]),
+        ) as fetch:
+            result = update_cask(self.text, release, self.download)
+        self.assertIn('version "0.1.2"', result)
+        fetch.assert_called_once_with(
+            ["gh", "api", "repos/tarnish233/skill-studio/releases/123/assets"], text=True
+        )
+        self.download.assert_called_once()
 
     def test_checksum_mismatch_is_rejected(self):
         self.download.return_value = "c" * 64

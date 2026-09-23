@@ -24,7 +24,13 @@ def update_cask(text, release, download_hash):
     if tuple(map(int, version.split("."))) <= tuple(map(int, versions[0].split("."))):
         return text
     name = f"Skill.Studio_{version}_universal.dmg"
-    assets = [asset for asset in release["assets"] if asset["name"] == name]
+    assets = release["assets"]
+    # The release detail response can lag behind the assets endpoint just after publication.
+    if not assets and release.get("id"):
+        assets = json.loads(subprocess.check_output(
+            ["gh", "api", f"repos/{REPOSITORY}/releases/{release['id']}/assets"], text=True
+        ))
+    assets = [asset for asset in assets if asset["name"] == name]
     if len(assets) != 1 or assets[0].get("state") != "uploaded" or assets[0].get("size", 0) <= 0:
         raise ValueError(f"Release DMG is not ready: {name}")
     asset = assets[0]
