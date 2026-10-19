@@ -1,6 +1,6 @@
 cask "skill-studio" do
-  version "0.6.4"
-  sha256 "4d018b7f80a19196819de7326b5c5f75af75985c2676d0f8c55888e6e38aecbb"
+  version "0.6.5"
+  sha256 "f5153bc87881230cb3154d9c7629ff09219f30e6ea4ca70e3b603731a6761c00"
 
   url "https://github.com/tarnish233/skill-studio/releases/download/v#{version}/Skill.Studio_#{version}_universal.dmg"
   name "Skill Studio"
