@@ -1,8 +1,8 @@
 cask "skill-studio" do
-  version "0.6.18"
-  sha256 "69ec3a91c588a4a7192520a5d9b98476cdeeaaafc0c2cd4e788e6ed7436bc76b"
+  version "0.6.19"
+  sha256 "a8f39f92bca456f1b2f82094b2d8523717607cafd6d4a07ea3cfb0c56b1789aa"
 
-  url "https://github.com/tarnish233/skill-studio/releases/download/v#{version}/Skill.Studio_#{version}_universal.dmg"
+  url "https://github.com/tarnish233/skill-studio/releases/download/v#{version}/Skill.Studio_#{version}_aarch64.dmg"
   name "Skill Studio"
   desc "Manage agent skills for Claude Code, Codex, and projects"
   homepage "https://github.com/tarnish233/skill-studio"
@@ -12,6 +12,7 @@ cask "skill-studio" do
     strategy :github_latest
   end
 
+  depends_on arch: :arm64
   depends_on macos: :monterey
 
   app "Skill Studio.app"
